@@ -528,10 +528,10 @@ get_stt_value(self: Thing, stt_key: Bits) : Number
 // - stt_key: the key in the stt map
 is_using_buff(self: Thing, stt_key: Bits) : Bool
   case self |thing
-    let current_tik = lookup(_ stt_key, self.stt)
-    case current_tik
+    let res = lookup(_ stt_key, self.stt)
+    case res
     | none => false
-    | some => if current_tik.value === 0 then false else true
+    | some => if res.value === 0 then false else true
 
 
 combine_mov_buffs(buff: Buff, i: Number) : Number

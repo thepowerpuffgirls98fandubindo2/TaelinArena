@@ -57,37 +57,40 @@ steve_fun(self: Thing) : Thing
 
   // Space
   | STEVE_BLOCK
-    case is_using_buff(self, STEVE_BLOCK_TIMER) as on_cooldown 
-    | true => animate(self, 1, STEVE_IDLE_000, 1, 1)
-    | false => 
-      let self = animate(self, 0, STEVE_BLOCK_CASTING_000, 10, 20)
-      // let self = 
-      //   if self.tik === 0 then 
-      //     set_thing_stt(self, insert(_ STEVE_BLOCK_TIMER, 2, self.stt))
-      //   else 
-      //     self 
-      let block_width = 8
-      let block_length = 24
-      let block = new_thing <= thing(
-        fun=steve_block_effect, 
-        dir = targ_dir(self),
-        box = pbox([ 
-          v3(block_width * -1, block_length * -1, 0), 
-          v3(block_width * -1, block_length *  1, 0), 
-          v3(block_width *  1, block_length *  1, 0), 
-          v3(block_width *  1, block_length * -1, 0), 
-        ])
-      )
-      let self = spawn(self, 1, [move(block, at_max_dist(self, 100))])
-      // let self = map_stt_key(self, STEVE_BLOCK_TIMER, () => 12)
-      // let self = set_thing_stt(self, insert(_ STEVE_BLOCK_TIMER, 4 * ONE_SEC, self.stt))
-      self
+    let self = animate_between(self, 1, STEVE_IDLE_000, 1, 0, 2)
+    let self =
+      case is_using_buff(self, STEVE_BLOCK_TIMER) as on_cooldown 
+      | true => // Continue on idle
+        // let self = animate_between(self, 1, STEVE_IDLE_000, 1, 2, 4)
+        let self = animate_between(self, 1, BEEDRILL_IDLE_000, 8, 2, 10)
+        let self = reset(self, 10)
+        self
+      | false => // In a minimun of 5 secs, will only be executed once, in a single tik
+        let self = animate_between(self, 0, STEVE_BLOCK_CASTING_000, 10, 2, 22)
+        let self = reset(self, 22)
+
+        let block_width = 8
+        let block_length = 24
+        let block = new_thing <= thing(
+          fun=steve_block_effect, 
+          dir=targ_dir(self),
+          box=pbox([ 
+            v3(block_width * -1, block_length * -1, 0), 
+            v3(block_width * -1, block_length *  1, 0), 
+            v3(block_width *  1, block_length *  1, 0), 
+            v3(block_width *  1, block_length * -1, 0), 
+          ]))
+        let self = end_thing(self, (self: Thing) => self, ONE_SEC * 5, STEVE_BLOCK_TIMER)
+
+        let self = spawn(self, self.tik, [move(block, at_max_dist(self, 100))])
+        self
+    self
 
   // E
   | STEVE_TAUNT
     animate(self, 0, STEVE_TAUNT_000, 28, 28)
 
-  else self
+  else animate(self, 1, STEVE_IDLE_000, 1, 2)
 
 steve_tnt_effect(self: Thing) : Thing
   case self |thing 
@@ -103,4 +106,6 @@ steve_ender_dragons_fury_effect(self: Thing) : Thing
 steve_block_effect(self: Thing) : Thing
   let self = animate_between(self, 0, STEVE_BLOCK_000, 11,  0, 11)
   let self = animate_between(self, 0, STEVE_BLOCK_010,  7, 59, 66)
-  die(self,67)
+  let self = reset(self, 66)
+  case self |thing
+  if self.tik === 65 then set_thing_die(self, true) else self
